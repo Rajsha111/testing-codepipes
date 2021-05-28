@@ -1,0 +1,23 @@
+schema_version: v0.0.1
+
+application:
+  import: ./app.yml
+
+deployment:
+  name: AutoDeployment
+  description: AutoDeploymentDescription
+  deploymentConfig:
+    artifact:
+      id: 3e9f0abf-c768-499d-8c46-5788888222dc
+    provisioner: aws
+    template:
+      moduleRefId: aws:basic-eks-regional@1
+      inputs:
+        cluster: "$$cluster"
+        region: ap-south-1
+        ports:
+          - name: cdn-app
+            containerPort: 8080
+            protocol: TCP
+    env:
+      cluster: "${terraform.name.value}"

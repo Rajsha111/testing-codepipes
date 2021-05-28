@@ -1,0 +1,99 @@
+schema_version: v0.0.1
+
+project:
+  name: CDN_APP
+
+environment:
+  name: AutoEnvironment
+  description: Auto_Env_CDN
+  revision:
+    driver: github
+    repo: https://github.com/cldcvr/vanguard-demo
+    dir: demo/infra
+    identifier: qa
+    type: branch
+  variables:
+    - type: tf_var
+      key: name
+      value: testing
+    - type: tf_var
+      key: project_code
+      value: c
+    - type: tf_var
+      key: environment
+      value: t
+    - type: tf_var
+      key: location
+      value: us-central1
+    - type: tf_var
+      key: cluster_ipv4_cidr
+      value: 10.254.192.144/28
+    - type: tf_var
+      key: ip_range_pods
+      value: codepipes-ip-range-pods-testing
+    - type: tf_var
+      key: ip_range_services
+      value: codepipes-svc-range-testing
+    - type: tf_var
+      key: network
+      value: codepipes-network-testing
+    - type: tf_var
+      key: subnetwork
+      value: codepipes-subnet-testing
+    - type: tf_var
+      key: subnet_ip
+      value: 172.20.0.0/22
+    - type: tf_var
+      key: kubernetes_version
+      value: 1.18.17-gke.700
+    - type: tf_var
+      key: project
+      value: vanguard-test-deploy
+    - type: tf_var
+      key: create_workload_identity_service_accounts
+      value: true
+    - type: tf_var
+      key: create_codepipes_bot_service_account
+      value: true
+  policySet: Unrestricted
+  creds:
+    - credsType_gcp
+    - credsType_github
+
+application:
+  name: AutoApp
+  description: AutoAppDescription
+  appConfig:
+    version: 1
+    vars:
+      A: 1
+      B: 2
+  artifacts:
+    - name: Cdn_Docker_Container_Image
+      id: 3e9f0abf-c768-499d-8c46-5788888222dc
+      containerImage:
+        provider: custom_registry
+        repo: cldcvr/cdn
+        reference: latest
+  creds:
+    - credsType_gcp
+    - credsType_github
+
+deployment:
+  name: AutoCdnDeployment
+  description: AutoAppDeployment
+  deploymentConfig:
+    artifact:
+      id: 3e9f0abf-c768-499d-8c46-5788888222dc
+    provisioner: gcp
+    template:
+      moduleRefId: gcp:basic-gke-regional@1
+      inputs:
+        cluster: invalid
+        region: us-central1
+        ports:
+          - name: cdn-app
+            containerPort: 8080
+            protocol: TCP
+    env:
+      cluster: "${terraform.name.value}"

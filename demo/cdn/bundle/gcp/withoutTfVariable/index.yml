@@ -1,0 +1,60 @@
+schema_version: v0.0.1
+
+project:
+  name: CDN_APP
+
+environment:
+  name: AutoEnvironment
+  description: Auto_Env_CDN
+  revision:
+    driver: github
+    repo: github.com/cldcvr/vanguard-demo
+    dir: demo/infra
+    identifier: qa
+    type: branch
+  variables:
+    - type: tf_var
+      key: name
+      value: testing
+  policySet: Unrestricted
+  creds:
+    - credsType_gcp
+    - credsType_github
+
+application:
+  name: AutoApp
+  description: AutoAppDescription
+  appConfig:
+    version: 1
+    vars:
+      A: 1
+      B: 2
+  artifacts:
+    - name: Cdn_Docker_Container_Image
+      id: 3e9f0abf-c768-499d-8c46-5788888222dc
+      containerImage:
+        provider: custom_registry
+        repo: cldcvr/cdn
+        reference: latest
+  creds:
+    - credsType_gcp
+    - credsType_github
+
+deployment:
+  name: AutoCdnDeployment
+  description: AutoAppDeployment
+  deploymentConfig:
+    artifact:
+      id: 3e9f0abf-c768-499d-8c46-5788888222dc
+    provisioner: gcp
+    template:
+      moduleRefId: gcp:basic-gke-regional@1
+      inputs:
+        cluster: "$$cluster"
+        region: us-central1
+        ports:
+          - name: cdn-app
+            containerPort: 8080
+            protocol: TCP
+    env:
+      cluster: "${terraform.name.value}"
